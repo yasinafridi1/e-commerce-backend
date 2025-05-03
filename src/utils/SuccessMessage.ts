@@ -6,7 +6,14 @@
  * @param {string} status - optional - status code, by default it will be 201
  */
 
-const SuccessMessage = (res, message, data = null, status = 200) => {
+import { Response } from "express";
+
+const SuccessMessage = (
+  res: Response,
+  message: string,
+  data: any = null,
+  status: number = 200
+) => {
   console.log(message);
   return res.status(status).json({
     success: true,
@@ -16,4 +23,4 @@ const SuccessMessage = (res, message, data = null, status = 200) => {
     }),
   });
 };
-module.exports = SuccessMessage;
+export default SuccessMessage;

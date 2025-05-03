@@ -1,7 +1,15 @@
-const ErrorHandler = require("../utils/ErrorHandler");
+import { NextFunction, Request, Response } from "express";
+import ErrorHandler from "../utils/ErrorHandler";
+import { UserRole } from "../types";
 
-const roleAuthorization = (allowedRoles) => {
-  return (req, res, next) => {
+interface CustomRequest extends Request {
+  user: {
+    role: UserRole;
+  };
+}
+
+const roleAuthorization = (allowedRoles: UserRole) => {
+  return (req: CustomRequest, res: Response, next: NextFunction) => {
     const userRole = req.user.role; // Assumes user role is available on req.user
 
     // Check if the user's role is in the allowedRoles array
