@@ -6,6 +6,8 @@ import HashingService from "../services/HashingService";
 import { ROLES, envVariables } from "../config/Constants";
 import { generateToken, storeToken } from "../services/JwtService";
 import SuccessMessage from "../utils/SuccessMessage";
+import { AuthenticatedRequest } from "../types";
+import { adminDto } from "../services/DTOs/UserDto";
 
 export const adminLogin = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -13,7 +15,7 @@ export const adminLogin = AsyncWrapper(
 
     const admin = await User.findOne({ where: { email, role: ROLES.admin } });
     if (!admin) {
-      return new ErrorHandler("Incorrect email or password", 400);
+      return next(new ErrorHandler("Incorrect email or password", 422));
     }
 
     if (admin.lockUntil && admin.lockUntil > new Date()) {
@@ -52,9 +54,62 @@ export const adminLogin = AsyncWrapper(
       role: ROLES.admin,
       userId: admin.userId,
     });
-
+    console.log(accessToken);
     await storeToken(admin.userId, accessToken, refreshToken);
 
-    return SuccessMessage(res, "Login successfully");
+    return SuccessMessage(res, "Login successfully", {
+      adminData: adminDto(admin),
+      accessToken,
+      refreshToken,
+    });
+  }
+);
+
+export const getAdminProfile = AsyncWrapper(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { userId } = req.user!;
+
+    const admin = await User.findOne({
+      where: { userId },
+      attributes: {
+        exclude: ["password", "createdAt", "updatedAt"],
+      },
+    });
+
+    if (!admin) {
+      return next(new ErrorHandler("Data not found", 404));
+    }
+
+    return SuccessMessage(
+      res,
+      "Admin profile fetched successfully",
+      adminDto(admin)
+    );
+  }
+);
+
+export const updateProfile = AsyncWrapper(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { phoneNumber, fullName } = req.body;
+    const { userId } = req.user!;
+
+    await User.update({ phoneNumber, fullName }, { where: { userId } });
+
+    const admin = await User.findOne({
+      where: { userId },
+      attributes: {
+        exclude: ["password", "createdAt", "updatedAt"],
+      },
+    });
+
+    if (!admin) {
+      return next(new ErrorHandler("Data not found", 404));
+    }
+
+    return SuccessMessage(
+      res,
+      "Admin profile fetched successfully",
+      adminDto(admin)
+    );
   }
 );

@@ -5,9 +5,9 @@ const options = {
   definition: {
     openapi: "3.0.0",
     info: {
-      title: "My API",
+      title: "API - (Node,TypeScript,MySQL) ",
       version: "1.0.0",
-      description: "API documentation for the system",
+      description: "API documentation for my Angular E-commerce application",
     },
     servers: [
       {

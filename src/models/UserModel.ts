@@ -99,7 +99,7 @@ User.init(
     status: {
       type: DataTypes.ENUM(...Object.values(ACCOUNT_STATUS)),
       allowNull: false,
-      defaultValue: ACCOUNT_STATUS.block, // ensure default if needed
+      defaultValue: ACCOUNT_STATUS.active, // ensure default if needed
     },
     passwordRetries: {
       type: DataTypes.INTEGER,

@@ -1,16 +1,10 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, Response } from "express";
 import ErrorHandler from "../utils/ErrorHandler";
-import { UserRole } from "../types";
+import { AuthenticatedRequest, UserRole } from "../types";
 
-interface CustomRequest extends Request {
-  user: {
-    role: UserRole;
-  };
-}
-
-const roleAuthorization = (allowedRoles: UserRole) => {
-  return (req: CustomRequest, res: Response, next: NextFunction) => {
-    const userRole = req.user.role; // Assumes user role is available on req.user
+const roleAuthorization = (allowedRoles: UserRole[]) => {
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const userRole = req.user!.role;
 
     // Check if the user's role is in the allowedRoles array
     if (allowedRoles.includes(userRole)) {
@@ -21,4 +15,4 @@ const roleAuthorization = (allowedRoles: UserRole) => {
   };
 };
 
-module.exports = roleAuthorization;
+export default roleAuthorization;
