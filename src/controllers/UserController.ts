@@ -7,19 +7,19 @@ import { ROLES, envVariables } from "../config/Constants";
 import { generateToken, storeToken } from "../services/JwtService";
 import SuccessMessage from "../utils/SuccessMessage";
 import { AuthenticatedRequest } from "../types";
-import { adminDto } from "../services/DTOs/UserDto";
+import { Op } from "sequelize";
 
 export const adminLogin = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password, fcmToken } = req.body;
 
-    const admin = await User.findOne({ where: { email, role: ROLES.admin } });
-    if (!admin) {
+    const user = await User.findOne({ where: { email, role: ROLES.customer } });
+    if (!user) {
       return next(new ErrorHandler("Incorrect email or password", 422));
     }
 
-    if (admin.lockUntil && admin.lockUntil > new Date()) {
-      const unlockTime = admin.lockUntil.toLocaleString();
+    if (user.lockUntil && user.lockUntil > new Date()) {
+      const unlockTime = user.lockUntil.toLocaleString();
       return next(
         new ErrorHandler(
           `Account is locked. Try again after: ${unlockTime}`,
@@ -30,61 +30,88 @@ export const adminLogin = AsyncWrapper(
 
     const comparePassword = await HashingService.compareHashed(
       password,
-      admin.password
+      user.password
     );
 
     if (!comparePassword) {
-      admin.passwordRetries += 1;
+      user.passwordRetries += 1;
 
       // Lock account if tries reach 5
-      if (admin.passwordRetries >= envVariables.maxPasswordAttempts) {
-        admin.lockUntil = new Date(Date.now() + 10 * 60 * 60 * 1000);
+      if (user.passwordRetries >= envVariables.maxPasswordAttempts) {
+        user.lockUntil = new Date(Date.now() + 10 * 60 * 60 * 1000);
       }
 
-      admin.save();
+      user.save();
       return next(new ErrorHandler("Invalid email or password", 422));
     }
 
-    admin.passwordRetries = 0;
-    admin.lockUntil = null;
-    admin.fcmToken = fcmToken;
-    await admin.save();
+    user.passwordRetries = 0;
+    user.lockUntil = null;
+    user.fcmToken = fcmToken;
+    await user.save();
 
     const { accessToken, refreshToken } = generateToken({
-      role: ROLES.admin,
-      userId: admin.userId,
+      role: ROLES.customer,
+      userId: user.userId,
     });
-
-    await storeToken(admin.userId, accessToken, refreshToken);
+    await storeToken(user.userId, accessToken, refreshToken);
 
     return SuccessMessage(res, "Login successfully", {
-      adminData: adminDto(admin),
+      adminData: user,
       accessToken,
       refreshToken,
     });
   }
 );
 
-export const getAdminProfile = AsyncWrapper(
+export const registerUser = AsyncWrapper(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { fullName, phoneNumber, email, gender, password } = req.body;
+    const existingUser = await User.findOne({
+      where: {
+        [Op.or]: [{ email }, { phoneNumber }],
+      },
+    });
+
+    if (existingUser) {
+      return next(new ErrorHandler("User already exist", 409));
+    }
+
+    const hashedpassword = await HashingService.generateHash(password);
+
+    const user = await User.create({
+      fullName,
+      email,
+      phoneNumber,
+      password,
+      gender,
+      role: ROLES.customer,
+    });
+
+    if (!user) {
+      return next(new ErrorHandler("User creation failed", 400));
+    }
+
+    return SuccessMessage(res, "User account created successfully");
+  }
+);
+
+export const getUserProfile = AsyncWrapper(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { userId } = req.user!;
 
-    const admin = await User.findOne({
+    const user = await User.findOne({
       where: { userId },
       attributes: {
         exclude: ["password", "createdAt", "updatedAt"],
       },
     });
 
-    if (!admin) {
+    if (!user) {
       return next(new ErrorHandler("Data not found", 404));
     }
 
-    return SuccessMessage(
-      res,
-      "Admin profile fetched successfully",
-      adminDto(admin)
-    );
+    return SuccessMessage(res, "User profile fetched successfully");
   }
 );
 
@@ -95,21 +122,17 @@ export const updateProfile = AsyncWrapper(
 
     await User.update({ phoneNumber, fullName }, { where: { userId } });
 
-    const admin = await User.findOne({
+    const user = await User.findOne({
       where: { userId },
       attributes: {
         exclude: ["password", "createdAt", "updatedAt"],
       },
     });
 
-    if (!admin) {
+    if (!user) {
       return next(new ErrorHandler("Data not found", 404));
     }
 
-    return SuccessMessage(
-      res,
-      "Admin profile fetched successfully",
-      adminDto(admin)
-    );
+    return SuccessMessage(res, "User profile fetched successfully");
   }
 );

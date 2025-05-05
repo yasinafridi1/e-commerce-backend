@@ -1,17 +1,17 @@
 import { DataTypes, Model, Optional } from "sequelize";
 import { sequelize } from "../config/dbConnect";
 
-export interface CatgeoryProps {
+export interface CategoryProps {
   categoryId?: number;
   title: string;
 }
 
 // 2. Optional fields during creation
 interface CategoryCreationAttributes
-  extends Optional<CatgeoryProps, "categoryId"> {}
+  extends Optional<CategoryProps, "categoryId"> {}
 
 // 3. Define the Model
-class Category extends Model<CatgeoryProps, CategoryCreationAttributes> {}
+class Category extends Model<CategoryProps, CategoryCreationAttributes> {}
 
 // 4. Initialize the model
 Category.init(
@@ -24,6 +24,10 @@ Category.init(
     title: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true,
+      set(value: string) {
+        this.setDataValue("title", value.toLowerCase());
+      },
     },
   },
   {
@@ -31,6 +35,7 @@ Category.init(
     modelName: "Category",
     tableName: "categories", // optional table name
     timestamps: true,
+    paranoid: true, // 👈 Enables soft delete
   }
 );
 

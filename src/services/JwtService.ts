@@ -6,11 +6,11 @@ const { accessTokenSecret, refreshTokenSecret } = envVariables;
 
 export const generateToken = (payload: TokenPayload) => {
   const accessToken = jwt.sign(payload, accessTokenSecret, {
-    expiresIn: payload.role === ROLES.admin ? "24h" : "5h",
+    expiresIn: payload.role === ROLES.admin ? "72h" : "72h",
   });
 
   const refreshToken = jwt.sign(payload, refreshTokenSecret, {
-    expiresIn: payload.role === ROLES.admin ? "2h" : "24h",
+    expiresIn: payload.role === ROLES.admin ? "148h" : "148h",
   });
 
   return { accessToken, refreshToken };

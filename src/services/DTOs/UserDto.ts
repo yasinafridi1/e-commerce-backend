@@ -5,7 +5,6 @@ export const adminDto = ({
   email,
   fullName,
   role,
-
   profilePicture,
 }: UserProps) => ({
   userId,

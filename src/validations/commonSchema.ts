@@ -1,16 +1,15 @@
 import { z } from "zod";
 
-export const emailSchema = z
-  .string({
-    required_error: "Email is required",
-  })
+export const stringValidation = (fieldName: string) =>
+  z.string({
+    required_error: `${fieldName} is required`,
+  });
+
+export const emailSchema = stringValidation("Email")
   .email("Invalid email address")
   .max(130, "Email must not exceed 130 character");
 
-export const passwordSchema = z
-  .string({
-    required_error: "Password is required",
-  })
+export const passwordSchema = stringValidation("Password")
   .min(6, "Password must be at least 6 characters")
   .max(20, "Password must not exceed 20 characters")
   .regex(
