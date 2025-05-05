@@ -11,7 +11,7 @@ import {
   updateCategory,
 } from "../controllers/CategoryController";
 import { ValidateBody, validateParams } from "../middlewares/Validator";
-import { categoryParams, categorySchema } from "../validations/CategorySchem";
+import { categoryParams, categorySchema } from "../validations";
 
 const router = express.Router();
 
@@ -29,7 +29,7 @@ router
   );
 
 router
-  .route("/:categoryid")
+  .route("/:categoryId")
   .get(
     [auth, roleAuthorization([ROLES.admin])],
     validateParams(categoryParams),

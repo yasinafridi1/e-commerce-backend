@@ -4,9 +4,9 @@ import Product from "../models/ProductModel";
 import User from "../models/UserModel";
 
 const dbInit = () => {
-  User.sync({ alter: true });
-  Category.sync({ alter: true });
-  // Product.sync({ force: true });
+  // User.sync({ alter: true });
+  // Category.sync({ alter: true });
+  Product.sync({ alter: true });
   // ContactUs.sync({ force: true });
 };
 

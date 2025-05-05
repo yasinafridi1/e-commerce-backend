@@ -7,8 +7,9 @@ import Category from "./CategoryModel";
 type ProductType = (typeof PRODUCT_TYPE)[keyof typeof PRODUCT_TYPE];
 
 // 2. Interface for attributes
-interface ProductAttributes {
+export interface ProductAttributes {
   productId?: number;
+  productName: string;
   categoryId: number;
   price: number;
   availableStock: number;
@@ -32,6 +33,11 @@ Product.init(
       type: DataTypes.BIGINT,
       autoIncrement: true,
       primaryKey: true,
+    },
+    productName: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: { len: [3, 250] },
     },
     categoryId: {
       type: DataTypes.BIGINT,
@@ -67,6 +73,7 @@ Product.init(
     modelName: "Product",
     tableName: "products",
     timestamps: true,
+    paranoid: true, // 👈 Enables soft delete
   }
 );
 
