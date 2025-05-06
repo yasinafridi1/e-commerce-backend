@@ -53,6 +53,16 @@
  *         schema:
  *           type: string
  *         description: ID of the category to update
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 example: "Updated Category Title"
  *     responses:
  *       200:
  *         description: Category updated successfully

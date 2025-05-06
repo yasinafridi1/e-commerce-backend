@@ -6,7 +6,7 @@ import User from "../models/UserModel";
 const dbInit = () => {
   // User.sync({ alter: true });
   // Category.sync({ alter: true });
-  Product.sync({ alter: true });
+  // Product.sync({ force: true });
   // ContactUs.sync({ force: true });
 };
 

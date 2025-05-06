@@ -6,20 +6,23 @@ import { ROLES } from "../config/Constants";
 import { ValidateBody, validateParams } from "../middlewares/Validator";
 import {
   addProduct,
-  allProducts,
+  allProductsAdmin,
+  allProductsPublic,
   deleteProduct,
   productDetail,
   updateProduct,
 } from "../controllers/ProductController";
 import { postProductSchema, productParams } from "../validations";
+import upload from "../utils/multer";
 
 const router = express.Router();
 
 router
   .route("/")
-  .get(auth, allProducts)
+  .get(allProductsPublic)
   .post(
     [auth, roleAuthorization([ROLES.admin])],
+    upload.any(),
     ValidateBody(postProductSchema),
     addProduct
   );
@@ -42,5 +45,9 @@ router
     validateParams(productParams),
     deleteProduct
   );
+
+router
+  .route("/admin")
+  .get([auth, roleAuthorization([ROLES.admin])], allProductsAdmin);
 
 export default router;

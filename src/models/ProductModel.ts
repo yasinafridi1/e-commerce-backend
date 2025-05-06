@@ -12,11 +12,18 @@ export interface ProductAttributes {
   productName: string;
   categoryId: number;
   price: number;
-  availableStock: number;
   productType: ProductType;
   status: "SHOW" | "HIDE";
-  colors: { code: string }[];
-  images: { url: string }[];
+  availableStock?: number; // 👈 Add this line
+  variants: {
+    color: string;
+    hex: string;
+    sizes: {
+      label: string;
+      stock: number;
+      image: string; // Single image per size
+    }[];
+  }[];
 }
 
 // 3. Creation attributes
@@ -47,10 +54,6 @@ Product.init(
       type: DataTypes.FLOAT,
       allowNull: false,
     },
-    availableStock: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
     productType: {
       type: DataTypes.ENUM(...Object.values(PRODUCT_TYPE)),
       allowNull: false,
@@ -59,13 +62,20 @@ Product.init(
       type: DataTypes.ENUM("SHOW", "HIDE"),
       allowNull: false,
     },
-    colors: {
-      type: DataTypes.JSON, // use JSONB for PostgreSQL, or JSON for MySQL
-      allowNull: false,
-    },
-    images: {
+    variants: {
       type: DataTypes.JSON,
       allowNull: false,
+    },
+    availableStock: {
+      type: DataTypes.VIRTUAL,
+      get() {
+        const variants = this.getDataValue("variants") || [];
+        return variants.reduce((sum, variant) => {
+          return (
+            sum + (variant.sizes || []).reduce((s, size) => s + size.stock, 0)
+          );
+        }, 0);
+      },
     },
   },
   {

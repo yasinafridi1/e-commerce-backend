@@ -17,7 +17,7 @@ export const removeImage = (fileName: string) => {
 };
 
 export const makeRequiredDirectories = () => {
-  const directories = ["uploads"];
+  const directories = ["uploads", "uploads/products"];
   directories.forEach((directory) => {
     const dir = path.join(__dirname, `../${directory}`);
     if (!existsSync(dir)) {

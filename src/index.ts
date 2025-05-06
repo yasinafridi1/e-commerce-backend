@@ -6,13 +6,17 @@ import { envVariables } from "./config/Constants";
 import { dbConnection } from "./config/dbConnect";
 import dbInit from "./config/dbInit";
 import ErrorMiddleware from "./middlewares/Error";
-
+import { makeRequiredDirectories } from "./utils/fileDirectory";
+import path from "path";
 const PORT = envVariables.port || 7000;
 const app = express();
 
-app.use(express.json());
+makeRequiredDirectories();
 
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use("/api/v1", routes);
+app.use("/uploads", express.static(path.resolve(__dirname, "./uploads")));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(ErrorMiddleware);
