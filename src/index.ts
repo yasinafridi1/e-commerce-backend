@@ -8,13 +8,22 @@ import dbInit from "./config/dbInit";
 import ErrorMiddleware from "./middlewares/Error";
 import { makeRequiredDirectories } from "./utils/fileDirectory";
 import path from "path";
+import cors, { CorsOptions } from "cors";
 const PORT = envVariables.port || 7000;
 const app = express();
+
+const allowedUrls = ["http://localhost:5173", "http://localhost:4242"];
+const corsOptions: CorsOptions = {
+  origin: allowedUrls,
+  credentials: true,
+};
 
 makeRequiredDirectories();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors(corsOptions));
+
 app.use("/api/v1", routes);
 app.use("/uploads", express.static(path.resolve(__dirname, "./uploads")));
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));

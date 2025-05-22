@@ -42,7 +42,7 @@ export const adminLogin = AsyncWrapper(
       }
 
       admin.save();
-      return next(new ErrorHandler("Invalid email or password", 422));
+      return next(new ErrorHandler("Incorrect email or password", 422));
     }
 
     admin.passwordRetries = 0;
