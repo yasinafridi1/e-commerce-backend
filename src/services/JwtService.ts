@@ -57,3 +57,20 @@ export const verifyAccessToken = async (token: string) => {
     throw error;
   }
 };
+
+export const verifyRefreshToken = (token: string) => {
+  try {
+    const decoded = jwt.verify(token, refreshTokenSecret) as DecodedUser;
+    return decoded;
+  } catch (err) {
+    const error = err as any;
+    error.statusCode = 422; // Set custom status code for token verification error
+    if (error.name === "JsonWebTokenError") {
+      error.message = "Invalid Token";
+    } else if (error.name === "TokenExpiredError") {
+      error.message = "Token Expired";
+    }
+
+    throw error;
+  }
+};

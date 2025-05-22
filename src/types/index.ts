@@ -24,3 +24,11 @@ export interface DecodedUser {
   iat: number;
   exp: number;
 }
+
+export interface PaginationQuery {
+  page?: string;
+  limit?: string;
+  search?: string;
+  status?: AccountStatus;
+  gender?: Gender;
+}

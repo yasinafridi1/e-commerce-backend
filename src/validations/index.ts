@@ -5,7 +5,7 @@ import {
   numberValidation,
   stringValidation,
 } from "./commonSchema";
-import { PRODUCT_TYPE } from "../config/Constants";
+import { ACCOUNT_STATUS, PRODUCT_TYPE } from "../config/Constants";
 
 const sizeEnum = z.enum(["xsm", "sm", "medium", "lg", "xl"]);
 
@@ -90,4 +90,34 @@ export const postProductSchema = z.object({
 
 export const productParams = z.object({
   productId: numberValidation("productId"),
+});
+
+export const refreshSessionSchema = z.object({
+  refreshToken: stringValidation("Refresh token").min(
+    10,
+    minLengthError("Refresh token", 10)
+  ),
+});
+
+const accountStatusValues = Object.values(ACCOUNT_STATUS) as [
+  string,
+  ...string[]
+];
+
+export const updateUserStatus = z.object({
+  status: z.enum(accountStatusValues, {
+    errorMap: (issue, ctx) => {
+      if (issue.code === "invalid_type" && issue.received === "undefined") {
+        // If status is missing (undefined)
+        return { message: "Status is required." };
+      }
+      if (issue.code === "invalid_enum_value") {
+        // If status value is invalid
+        return {
+          message: `Only ${accountStatusValues.join(" or ")} are accepted.`,
+        };
+      }
+      return { message: ctx.defaultError };
+    },
+  }),
 });

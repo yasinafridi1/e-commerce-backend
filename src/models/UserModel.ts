@@ -131,6 +131,7 @@ User.init(
     modelName: "User",
     tableName: "users",
     timestamps: true,
+    paranoid: true,
     hooks: {
       afterCreate: (user: User) => {
         if (user.role === ROLES.admin) {

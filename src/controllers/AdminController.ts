@@ -6,8 +6,9 @@ import HashingService from "../services/HashingService";
 import { ROLES, envVariables } from "../config/Constants";
 import { generateToken, storeToken } from "../services/JwtService";
 import SuccessMessage from "../utils/SuccessMessage";
-import { AuthenticatedRequest } from "../types";
+import { AccountStatus, AuthenticatedRequest, PaginationQuery } from "../types";
 import { adminDto } from "../services/DTOs/UserDto";
+import { Op } from "sequelize";
 
 export const adminLogin = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -112,4 +113,111 @@ export const updateProfile = AsyncWrapper(
       adminDto(admin)
     );
   }
+);
+
+/*
+
+            ============================================================
+                              CUSTOMER FUNCTION
+            ============================================================
+*/
+
+const getAllCustomers = AsyncWrapper(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { page, limit, search, status, gender }: PaginationQuery = req.query;
+    let pageNumber = parseInt(page as string, 10);
+    let limitNumber = parseInt(limit as string, 10);
+
+    pageNumber = isNaN(pageNumber) || pageNumber < 1 ? 1 : pageNumber; // check if page is number or not less than 1
+    limitNumber = isNaN(limitNumber) || limitNumber < 1 ? 10 : limitNumber; // check if limit is number or not less than 1
+
+    const offset = limitNumber * (pageNumber - 1);
+    const where: any = {
+      role: ROLES.customer,
+    };
+
+    if (search) {
+      where[Op.or] = [
+        { fullName: { [Op.like]: `%${search}%` } },
+        { email: { [Op.like]: `%${search}%` } },
+        { phoneNumber: { [Op.like]: `%${search}%` } },
+      ];
+    }
+
+    if (status) {
+      where.status = status;
+    }
+
+    if (gender) {
+      where.gender = gender;
+    }
+
+    const users = await User.findAll({
+      where,
+      attributes: [
+        "userId",
+        "role",
+        "fullName",
+        "email",
+        "phoneNumber",
+        "isVerfied",
+        "gender",
+        "status",
+        "profilePicture",
+        "createdAt", // ✅ added
+        "updatedAt", // ✅ added
+      ],
+      limit: limitNumber,
+      offset,
+      order: [["createdAt", "DESC"]],
+    });
+
+    const totalUsers = await User.count();
+    const totalPages = Math.ceil(totalUsers / limitNumber);
+    return SuccessMessage(res, "Customers fetched successfully", {
+      users,
+      totalUsers,
+      totalPages,
+      currentPage: pageNumber,
+      limit: limitNumber,
+    });
+  }
+);
+
+export const updateCustomerStatus = AsyncWrapper(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const { status } = req.body;
+    const customer = await User.findOne({
+      where: { userId, role: ROLES.customer },
+    });
+    if (!customer) {
+      return next(new ErrorHandler("Customer not found", 404));
+    }
+    await User.update({ status }, { where: { userId } });
+    return SuccessMessage(res, "Customer updated successfully", {
+      user: customer.userId,
+      status,
+    });
+  }
+);
+
+export const deleteCustomer = AsyncWrapper(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+    const customer = await User.findOne({
+      where: { userId, role: ROLES.customer },
+    });
+    if (!customer) {
+      return next(new ErrorHandler("Customer not found", 404));
+    }
+    await User.destroy({ where: { userId } });
+    return SuccessMessage(res, "Customer deleted successfully", {
+      user: customer.userId,
+    });
+  }
+);
+
+export const getCustomerDetail = AsyncWrapper(
+  async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {}
 );

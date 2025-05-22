@@ -1,8 +1,7 @@
 import { NextFunction, Response } from "express";
 import ErrorHandler from "../utils/ErrorHandler";
 import { verifyAccessToken } from "../services/JwtService";
-import { AuthenticatedRequest, DecodedUser } from "../types";
-import { JwtPayload } from "jsonwebtoken";
+import { AuthenticatedRequest } from "../types";
 
 const auth = async (
   req: AuthenticatedRequest,
