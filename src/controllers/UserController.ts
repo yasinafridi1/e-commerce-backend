@@ -9,7 +9,7 @@ import SuccessMessage from "../utils/SuccessMessage";
 import { AuthenticatedRequest } from "../types";
 import { Op } from "sequelize";
 
-export const adminLogin = AsyncWrapper(
+export const customerLogin = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password, fcmToken } = req.body;
 
@@ -64,7 +64,7 @@ export const adminLogin = AsyncWrapper(
   }
 );
 
-export const registerUser = AsyncWrapper(
+export const registerCustomer = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
     const { fullName, phoneNumber, email, gender, password } = req.body;
     const existingUser = await User.findOne({
@@ -96,7 +96,7 @@ export const registerUser = AsyncWrapper(
   }
 );
 
-export const getUserProfile = AsyncWrapper(
+export const getCustomerProfile = AsyncWrapper(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { userId } = req.user!;
 
@@ -115,7 +115,7 @@ export const getUserProfile = AsyncWrapper(
   }
 );
 
-export const updateProfile = AsyncWrapper(
+export const updateCustomerProfile = AsyncWrapper(
   async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { phoneNumber, fullName } = req.body;
     const { userId } = req.user!;

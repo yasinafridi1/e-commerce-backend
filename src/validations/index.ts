@@ -1,11 +1,13 @@
 import { z } from "zod";
 import {
+  emailSchema,
   maxLengthError,
   minLengthError,
   numberValidation,
+  passwordSchema,
   stringValidation,
 } from "./commonSchema";
-import { ACCOUNT_STATUS, PRODUCT_TYPE } from "../config/Constants";
+import { ACCOUNT_STATUS, GENDER, PRODUCT_TYPE } from "../config/Constants";
 
 const sizeEnum = z.enum(["xsm", "sm", "medium", "lg", "xl"]);
 
@@ -104,6 +106,8 @@ const accountStatusValues = Object.values(ACCOUNT_STATUS) as [
   ...string[]
 ];
 
+const genderValues = Object.values(GENDER) as [string, ...string[]];
+
 export const updateUserStatus = z.object({
   status: z.enum(accountStatusValues, {
     errorMap: (issue, ctx) => {
@@ -118,6 +122,27 @@ export const updateUserStatus = z.object({
         };
       }
       return { message: ctx.defaultError };
+    },
+  }),
+});
+
+export const registerUserSchema = z.object({
+  fullName: stringValidation("Full name")
+    .min(3, minLengthError("Full name", 3))
+    .max(50, maxLengthError("Full name", 50)),
+  email: emailSchema,
+  password: passwordSchema,
+  phoneNumber: z
+    .string()
+    .regex(/^\+\d+$/, "Phone number must start with + and contain only digits")
+    .refine((val) => val.length > 6 && val.length < 16, {
+      message:
+        "Phone number length must be greater than 6 and less than 16 characters",
+    }),
+  gender: z.enum(genderValues, {
+    errorMap: (issue, ctx) => {
+      console.log("Issue ==>", issue);
+      return { message: `Gender must be one of ${genderValues.join(" or ")}` };
     },
   }),
 });
