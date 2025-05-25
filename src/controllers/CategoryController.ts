@@ -65,9 +65,12 @@ export const addCategory = AsyncWrapper(
 
     const isExisting = await Category.findOne({
       where: { title: title.toLowerCase() },
+      paranoid: false, // Ensure we check even soft-deleted records
     });
     if (isExisting) {
-      return next(new ErrorHandler("Category already exist", 409));
+      return next(
+        new ErrorHandler("Category already exist or may have soft deleted", 409)
+      );
     }
 
     const newCategory = await Category.create({ title });
@@ -85,6 +88,7 @@ export const updateCategory = AsyncWrapper(
         title: title.toLowerCase(),
         categoryId: { [Op.ne]: categoryId }, // Not equal to the current ID
       },
+      paranoid: false, // Ensure we check even soft-deleted records
     });
 
     if (isExisting) {
@@ -93,7 +97,9 @@ export const updateCategory = AsyncWrapper(
 
     await Category.update({ title }, { where: { categoryId } });
 
-    const category = await Category.findAll({ where: { categoryId } });
+    const category = await Category.findByPk(categoryId, {
+      attributes: { exclude: ["deletedAt"] },
+    });
 
     return SuccessMessage(res, "Category updated successfully", category);
   }
@@ -117,13 +123,14 @@ export const getCategoryDetail = AsyncWrapper(
 export const deleteCategory = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
     const { categoryId } = req.params;
-
     const deleteCount = await Category.destroy({ where: { categoryId } });
 
     if (deleteCount === 0) {
       return next(new ErrorHandler("Category not found", 400));
     }
 
-    return SuccessMessage(res, "Category deleted successfully");
+    return SuccessMessage(res, "Category deleted successfully", {
+      categoryId: Number(categoryId),
+    });
   }
 );
