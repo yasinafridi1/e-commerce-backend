@@ -122,7 +122,7 @@ export const updateProfile = AsyncWrapper(
             ============================================================
 */
 
-const getAllCustomers = AsyncWrapper(
+export const getAllCustomers = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
     const { page, limit, search, status, gender }: PaginationQuery = req.query;
     let pageNumber = parseInt(page as string, 10);
@@ -160,7 +160,7 @@ const getAllCustomers = AsyncWrapper(
         "fullName",
         "email",
         "phoneNumber",
-        "isVerfied",
+        "isVerified",
         "gender",
         "status",
         "profilePicture",
@@ -172,11 +172,11 @@ const getAllCustomers = AsyncWrapper(
       order: [["createdAt", "DESC"]],
     });
 
-    const totalUsers = await User.count();
+    const totalUsers = await User.count({ where: { role: ROLES.customer } });
     const totalPages = Math.ceil(totalUsers / limitNumber);
     return SuccessMessage(res, "Customers fetched successfully", {
       users,
-      totalUsers,
+      totalRecords: totalUsers,
       totalPages,
       currentPage: pageNumber,
       limit: limitNumber,

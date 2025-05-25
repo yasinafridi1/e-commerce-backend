@@ -4,6 +4,7 @@ import ErrorHandler from "../utils/ErrorHandler";
 import Category from "../models/CategoryModel";
 import SuccessMessage from "../utils/SuccessMessage";
 import { Op } from "sequelize";
+import { PaginationQuery } from "../types";
 
 export const getAllCategories = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -14,8 +15,47 @@ export const getAllCategories = AsyncWrapper(
 
 export const getAllCategoriesWithDetail = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
-    const data = await Category.findAll();
-    return SuccessMessage(res, "All category fetched successfully", data);
+    const { page, limit, search }: PaginationQuery = req.query;
+    let pageNumber = parseInt(page as string, 10);
+    let limitNumber = parseInt(limit as string, 10);
+
+    // Defaults: page=1, limit=10 if invalid
+    pageNumber = isNaN(pageNumber) || pageNumber < 1 ? 1 : pageNumber;
+    limitNumber = isNaN(limitNumber) || limitNumber < 1 ? 10 : limitNumber;
+
+    const offset = limitNumber * (pageNumber - 1);
+    const where: any = {}; // Optional: Add filters if needed
+
+    // Add search filter (if needed)
+    if (search) {
+      where[Op.or] = [
+        { title: { [Op.like]: `%${search}%` } }, // Assuming 'name' is a field in Category
+      ];
+    }
+
+    const categories = await Category.findAll({
+      where,
+      attributes: [
+        "categoryId", // Adjust fields as per your model
+        "title",
+        "createdAt",
+        "updatedAt",
+      ],
+      limit: limitNumber,
+      offset,
+      order: [["createdAt", "DESC"]], // Sort by newest first
+    });
+
+    const totalCategories = await Category.count({ where });
+    const totalPages = Math.ceil(totalCategories / limitNumber);
+
+    return SuccessMessage(res, "Categories fetched successfully", {
+      categories,
+      totalRecords: totalCategories,
+      totalPages,
+      currentPage: pageNumber,
+      limit: limitNumber,
+    });
   }
 );
 

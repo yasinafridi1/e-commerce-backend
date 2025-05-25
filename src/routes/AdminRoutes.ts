@@ -2,6 +2,7 @@ import {
   adminLogin,
   deleteCustomer,
   getAdminProfile,
+  getAllCustomers,
   getCustomerDetail,
   updateCustomerStatus,
   updateProfile,
@@ -22,6 +23,9 @@ router
   .get([auth, roleAuthorization([ROLES.admin])], getAdminProfile)
   .patch([auth, roleAuthorization([ROLES.admin])], updateProfile);
 
+router
+  .route("/customer")
+  .get([auth, roleAuthorization([ROLES.admin])], getAllCustomers);
 router
   .route("/customer/:userId")
   .get(
