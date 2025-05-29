@@ -4,11 +4,25 @@ import ErrorHandler from "../utils/ErrorHandler";
 import Category from "../models/CategoryModel";
 import SuccessMessage from "../utils/SuccessMessage";
 import { Op } from "sequelize";
-import { PaginationQuery } from "../types";
+import { CachedCategoryData, CategoryData, PaginationQuery } from "../types";
+import {
+  getFromCache,
+  removeCache,
+  setCategoryCache,
+} from "../services/CacheService";
+import { CACHE_KEYS } from "../config/Constants";
+import { categoryBaseDto } from "../services/DTOs/CategoryDto";
 
 export const getAllCategories = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
-    const data = await Category.findAll();
+    let data: CachedCategoryData[] | unknown = getFromCache(
+      CACHE_KEYS.allCategories
+    );
+    if (!data) {
+      const freshData: CategoryData[] | any = await Category.findAll();
+      setCategoryCache(freshData);
+      data = freshData.map((item: CategoryData) => categoryBaseDto(item));
+    }
     return SuccessMessage(res, "All category fetched successfully", data);
   }
 );
@@ -73,9 +87,13 @@ export const addCategory = AsyncWrapper(
       );
     }
 
-    const newCategory = await Category.create({ title });
-
-    return SuccessMessage(res, "Category added successfully", newCategory);
+    const newCategory: CategoryData | any = await Category.create({ title });
+    removeCache(CACHE_KEYS.allCategories);
+    return SuccessMessage(
+      res,
+      "Category added successfully",
+      categoryBaseDto(newCategory)
+    );
   }
 );
 
@@ -100,6 +118,7 @@ export const updateCategory = AsyncWrapper(
     const category = await Category.findByPk(categoryId, {
       attributes: { exclude: ["deletedAt"] },
     });
+    removeCache(CACHE_KEYS.allCategories);
 
     return SuccessMessage(res, "Category updated successfully", category);
   }
@@ -128,6 +147,7 @@ export const deleteCategory = AsyncWrapper(
     if (deleteCount === 0) {
       return next(new ErrorHandler("Category not found", 400));
     }
+    removeCache(CACHE_KEYS.allCategories);
 
     return SuccessMessage(res, "Category deleted successfully", {
       categoryId: Number(categoryId),

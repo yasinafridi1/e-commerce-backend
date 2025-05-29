@@ -46,3 +46,7 @@ export const PAYMENT_TYPES = {
   paypal: "PAYPAL",
   crypto: "CRYPTO",
 };
+
+export const CACHE_KEYS = {
+  allCategories: "allCategories",
+};

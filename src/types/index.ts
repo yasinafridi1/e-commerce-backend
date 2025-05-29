@@ -44,3 +44,14 @@ export interface RawProductVariant {
   colorCode: string;
   sizes: RawVariantSize[];
 }
+
+export interface CachedCategoryData {
+  categoryId: string;
+  title: string;
+}
+
+export interface CategoryData extends CachedCategoryData {
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: null | string;
+}

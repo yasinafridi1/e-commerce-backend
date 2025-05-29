@@ -1,7 +1,7 @@
-import { CategoryProps } from "../../models/CategoryModel";
 import Product from "../../models/ProductModel";
+import { CategoryData } from "../../types";
 
-export const categoryBaseDto = ({ categoryId, title }: CategoryProps) => ({
+export const categoryBaseDto = ({ categoryId, title }: CategoryData) => ({
   categoryId,
   title,
 });
@@ -9,7 +9,7 @@ export const categoryBaseDto = ({ categoryId, title }: CategoryProps) => ({
 export const catgeoryDtoWithProductAndOrder = async ({
   categoryId,
   title,
-}: CategoryProps) => {
+}: CategoryData) => {
   try {
     const productCounts = await Product.count({ where: { categoryId } });
     return {

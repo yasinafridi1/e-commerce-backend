@@ -21,7 +21,7 @@ router
 
 router
   .route("/")
-  .get(auth, getAllCategories)
+  .get(getAllCategories)
   .post(
     [auth, roleAuthorization([ROLES.admin])],
     ValidateBody(categorySchema),
