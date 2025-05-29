@@ -5,6 +5,7 @@ import SuccessMessage from "../utils/SuccessMessage";
 import { Op } from "sequelize";
 import Product from "../models/ProductModel";
 import Category from "../models/CategoryModel";
+import { formatProductVariant } from "../utils/formatter";
 
 export const allProductsPublic = AsyncWrapper(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -133,30 +134,19 @@ export const addProduct = AsyncWrapper(
     }
 
     const files = req.files as Express.Multer.File[]; // multer puts files here
-
     // Parse variants (make sure frontend sends it as JSON string)
     const parsedVariants = JSON.parse(variants);
+    // ass image to its variant based on color code and size
+    formatProductVariant(parsedVariants, files);
 
-    //loop and assign image from files
-    for (let variant of parsedVariants) {
-      for (let size of variant.sizes) {
-        const matchedFile = (files as Express.Multer.File[])?.find((f) => {
-          return f.fieldname === `${variant.color}-${size.label}`;
-        });
-        if (matchedFile) {
-          size.image = `${matchedFile.filename}`;
-        }
-      }
-    }
-
-    // const product = await Product.create({
-    //   productName,
-    //   categoryId,
-    //   price,
-    //   status,
-    //   productType,
-    //   variants: parsedVariants,
-    // });
+    const product = await Product.create({
+      productName,
+      categoryId: parseInt(categoryId),
+      price: parseInt(price),
+      status,
+      productType,
+      variants: parsedVariants,
+    });
 
     return SuccessMessage(res, "Product added successfully");
   }

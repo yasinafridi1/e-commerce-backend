@@ -21,9 +21,12 @@ router
   .route("/")
   .get(allProductsPublic)
   .post(
-    [auth, roleAuthorization([ROLES.admin])],
-    upload.any(),
-    ValidateBody(postProductSchema),
+    [
+      auth,
+      roleAuthorization([ROLES.admin]),
+      upload.array("images"),
+      ValidateBody(postProductSchema),
+    ],
     addProduct
   );
 

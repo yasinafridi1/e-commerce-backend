@@ -32,3 +32,15 @@ export interface PaginationQuery {
   status?: AccountStatus;
   gender?: Gender;
 }
+
+interface RawVariantSize {
+  size: string;
+  stock: number;
+  image: string;
+}
+
+export interface RawProductVariant {
+  colorName: string;
+  colorCode: string;
+  sizes: RawVariantSize[];
+}

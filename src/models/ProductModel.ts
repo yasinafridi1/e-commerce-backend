@@ -16,10 +16,10 @@ export interface ProductAttributes {
   status: "SHOW" | "HIDE";
   availableStock?: number; // 👈 Add this line
   variants: {
-    color: string;
-    hex: string;
+    colorName: string;
+    colorCode: string;
     sizes: {
-      label: string;
+      size: string;
       stock: number;
       image: string; // Single image per size
     }[];

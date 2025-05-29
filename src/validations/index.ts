@@ -9,17 +9,15 @@ import {
 } from "./commonSchema";
 import { ACCOUNT_STATUS, GENDER, PRODUCT_TYPE } from "../config/Constants";
 
-const sizeEnum = z.enum(["xsm", "sm", "medium", "lg", "xl"]);
-
 const sizeSchema = z.object({
-  size: sizeEnum,
-  stock: z.number().min(0, "Stock must be 0 or more"),
-  // image: z.string().min(1, "Image is required for each size"),
+  size: stringValidation("Size"),
+  stock: numberValidation("Stock"),
+  image: stringValidation("Image"),
 });
 
 const variantSchema = z.object({
-  color: z.string().min(1, "Color is required"),
-  hex: z.string().min(1, "Hex value is required"),
+  colorName: stringValidation("Color name"),
+  colorCode: stringValidation("Color code"),
   sizes: z.array(sizeSchema).min(1, "At least one size must be provided"),
 });
 
@@ -33,61 +31,55 @@ export const categoryParams = z.object({
   categoryId: numberValidation("categoryId"),
 });
 
+const variantsSchemaFromString = z
+  .string({
+    required_error: "Variants are required",
+    invalid_type_error: "Variants must be a JSON string",
+  })
+  .transform((val, ctx) => {
+    // 1️⃣ Parse JSON safely
+    try {
+      return JSON.parse(val);
+    } catch {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Variants must be valid JSON",
+      });
+      return z.NEVER; // abort further transforms
+    }
+  })
+  // 2️⃣ Pipe into an array of variantSchema so Zod can validate every field
+  .pipe(
+    z
+      .array(variantSchema, {
+        invalid_type_error: "Variants must be an array of objects",
+      })
+      .min(1, "At least one variant is required")
+  );
+
 export const postProductSchema = z.object({
   productName: stringValidation("Product name")
     .min(3, minLengthError("Product name", 3))
     .max(250, maxLengthError("Product name", 250)),
   categoryId: numberValidation("categoryId"),
   price: numberValidation("Price"),
-
-  variants: z
-    .string() // Ensure variants is treated as a string
-    .transform((val) => {
-      try {
-        // Parse the string into a JavaScript object (array of variants)
-        const parsedVariants = JSON.parse(val);
-        console.log("Values ===>", parsedVariants);
-
-        // Ensure the parsed value is an array
-        if (!Array.isArray(parsedVariants)) {
-          throw new Error("Variants must be an array of objects");
-        }
-
-        // Validate each variant object
-        parsedVariants.forEach((variant: any) => {
-          try {
-            variantSchema.parse(variant);
-          } catch (variantError) {
-            throw new Error("Invalid variant structure");
-          }
-        });
-
-        return parsedVariants;
-      } catch (error) {
-        throw new Error("Invalid JSON format for variants: ");
-      }
-    })
-    .refine((val) => val.length > 0, {
-      message: "At least one variant is required",
-    }),
-
   productType: z.enum(
     [
       PRODUCT_TYPE.male,
       PRODUCT_TYPE.female,
       PRODUCT_TYPE.universal,
       PRODUCT_TYPE.children,
-    ],
+    ] as [string, ...string[]],
     {
       required_error: "Product type is required",
       invalid_type_error: "Invalid product type",
     }
   ),
-
   status: z.enum(["SHOW", "HIDE"], {
     required_error: "Status is required",
     invalid_type_error: "Status must be SHOW or HIDE",
   }),
+  variants: variantsSchemaFromString,
 });
 
 export const productParams = z.object({
